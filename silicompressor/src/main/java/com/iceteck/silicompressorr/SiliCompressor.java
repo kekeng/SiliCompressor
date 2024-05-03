@@ -7,15 +7,15 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.core.content.FileProvider;
-import androidx.exifinterface.media.ExifInterface;
 
 import com.iceteck.silicompressorr.videocompression.MediaController;
 
@@ -343,29 +343,31 @@ public class SiliCompressor {
             canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
 
             // check the rotation of the image and display it properly
-            androidx.exifinterface.media.ExifInterface exif;
-            try {
-                exif = new ExifInterface(mContext.getContentResolver().openInputStream(imageUri));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ExifInterface exif;
+                try {
+                    exif = new ExifInterface(mContext.getContentResolver().openInputStream(imageUri));
 
-                int orientation = exif.getAttributeInt(
-                        ExifInterface.TAG_ORIENTATION, 0);
-                Log.d("EXIF", "Exif: " + orientation);
-                Matrix matrix = new Matrix();
-                if (orientation == 6) {
-                    matrix.postRotate(90);
+                    int orientation = exif.getAttributeInt(
+                            ExifInterface.TAG_ORIENTATION, 0);
                     Log.d("EXIF", "Exif: " + orientation);
-                } else if (orientation == 3) {
-                    matrix.postRotate(180);
-                    Log.d("EXIF", "Exif: " + orientation);
-                } else if (orientation == 8) {
-                    matrix.postRotate(270);
-                    Log.d("EXIF", "Exif: " + orientation);
+                    Matrix matrix = new Matrix();
+                    if (orientation == 6) {
+                        matrix.postRotate(90);
+                        Log.d("EXIF", "Exif: " + orientation);
+                    } else if (orientation == 3) {
+                        matrix.postRotate(180);
+                        Log.d("EXIF", "Exif: " + orientation);
+                    } else if (orientation == 8) {
+                        matrix.postRotate(270);
+                        Log.d("EXIF", "Exif: " + orientation);
+                    }
+                    scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
+                            scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
+                            true);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
-                        scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
-                        true);
-            } catch (IOException e) {
-                e.printStackTrace();
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
